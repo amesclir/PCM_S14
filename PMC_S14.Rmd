@@ -1,0 +1,212 @@
+---
+title: "PCM_S14"
+author: "Marcial Escudero"
+date: "1/23/2024"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+MODELO CHROMEVOL
+
+El primer acercamiento a la modelización de la evolución cromosomática son los modelos probabilísticos implementados en chromEvol y luego expandidos en la segunda versión de chromEvol.
+Para detalles a cerca de estos modelos, por favor, lee el capítulo de libro Escudero et al. (2023) donde se habla sobre los diferentes parámetros que puede haber en estos modelos. No obstante, estos parámetro modelizan o bien la disploidía o bien la poliploidía.
+
+Lo primero que haremos es correr en chromEvol 2.0 los modelos CONST_RATE, CONST_RATE_DEMI, CONST_RATE_DEMI_EST, CONST_RATE_NO_DUPL, LINEAR_RATE, LINEAR_RATE_DEMI, LINEAR_RATE_DEMI_EST y LINEAR_RATE_NO_DUPL. 
+Copia y pega los parámetros de cada uno de los modelos paramCONST_RATE, paramCONST_RATE_DEMI, paramCONST_RATE_DEMI_EST, paramCONST_RATE_NO_DUPL, paramLINEAR_RATE, paramLINEAR_RATE_DEMI, paramLINEAR_RATE_DEMI_EST y paramLINEAR_RATE_NO_DUPL que hay en este proyecto de R. Pegalos junto con los archivos de Centaurium (archivo de conteos de cromosomas Centaurium.txt y archivo del árbol filogenético Centaurium.tree). Puede ejercutar cada uno de los modelos con la linea "./chromEvol paramCONST_RATE". Y así con todos los modelos. 
+Una vez que tengas todos los resultados, pega la carpeta OUT en este proyecto.
+
+En primer lugar vamos representar el mejor modelo según la versión 1.0 de chromEvol.
+```{r}
+library(ape)
+source("ChromEvol.R")
+myChromEvol <- read.ce("./OUT/CONST_RATE_DEMI_EST/")
+plot.anc(myChromEvol)
+
+```
+
+Y en segundo lugar el mejor modelo según la versión 2.0 de chromEvol.
+```{r}
+
+myChromEvol2 <- read.ce("./OUT/BASE_NUM_DUPL/")
+plot.anc(myChromEvol2)
+
+```
+
+Compara y discute los resultados.
+
+
+Ahora vamos a ver el modelo ChromoPlus. Con este modelo podemos modelizar conjuntamente un caracter discreto binario y el número de cromosomas de manera dependiente.
+En este caso vamos reconstruir la biogeografía de Centaurium (ancestral vs. new colonized/expanded areas) y lo cromosomas.
+
+```{r}
+#install.packages("Rtools")
+#install.packages("devtools")
+#library(devtools)
+#install_github('coleoguy/chromePlus')
+#force=TRUE
+library(chromePlus)
+library(diversitree)
+
+##Chromosome number and distribution##
+
+?datatoMatrix
+dat.mat2 <- datatoMatrix(x=mydata[,1:3], range= c(9,28), hyper=T)
+dat.mat2
+
+# make the basic likelihood function
+
+?is.ultrametric
+is.ultrametric(mytree)
+
+?make.mkn
+
+lik <- make.mkn(tree = mytree, states= dat.mat2, k=ncol(dat.mat2), strict = F, control = list(method="ode"))
+
+
+# constrain the likelihood function to a biologically realistic design
+
+?constrainMkn
+
+con.lik3 <- constrainMkn(data = dat.mat2,
+                        lik = lik,
+                        polyploidy = F,
+                        hyper = T,
+                        constrain = list(drop.demi = F,
+                                         drop.poly= F))
+
+
+con.lik4 <- constrainMkn(data = dat.mat2,
+                        lik = lik,
+                        constrain = list(nometa = T))
+
+# lets make sure we have the parameters we expect
+#?argnames
+argnames(lik)
+argnames(con.lik3)
+argnames(con.lik4)
+#Una vez que tenemos lik y con.lik, sigo utilizando diversitree
+#Crear modelos ML con "lik" y con "con.lik"
+
+con.fit3 <- find.mle(con.lik3, rep(0.1,10), method="subplex")
+
+con.fit4 <- find.mle(con.lik4, rep(0.1,6), method="subplex")
+
+con.fit3$par
+con.fit4$par
+
+anova(con.fit3, constrained=con.fit4)
+
+
+```
+
+
+Finalmente vamos ajustar un modelo más complejo, el modelo ChromoSSE. En este caso calculamos tasas de evolución cromosomáticas en las ramas (anagenéticas), en los nodos (cladogenéticas) y una tasa de extinción global. Esto lo hacemos en el software RevBayes.
+Puedes usar los archivos de entrada Centaurium.tree y CentauriumData.tsv. Puedes copiar toda la carpeta data (donde están dichos archivos) y el archivo de control del análisis ChromEvol_clado.Rev y pégalos en la carpeta donde tengas instalado RevBayes. 
+Puedes ejecutar el software con el comando "singularity run --app rb RevBayes_Singularity_1.1.1.simg ChromEvol_clado.Rev" en caso de usar linux y tener la versión precompilada tipor singularity. En caso contario con el comando "./rb ChromEvol_clado.Rev".
+Copia y pega los resultados en la carpeta de este proyecto y procedamos visualizar e interpretar los resultados.
+
+```{r}
+#library(devtools)
+#devtools::install_github("cmt2/RevGadgets", force = T)
+
+library(RevGadgets)
+library(coda)
+library(ggplot2)
+library(ggtree)
+library(grid)
+library(gridExtra)
+
+file <- "ChromEvol_clado_final.tree"
+labs <- c("10" = "10", "11" = "11", "14" = "14", "15" = "15", "18" = "18", "19" = "19", "20" = "20", "21" = "21", "27" = "27", "28" = "28", "3" = "3", "4" = "4", "5" = "5", "6" = "6", "7" = "7", "8" = "8", "9" = "9")
+
+dec_example <- processAncStates(file, labs)
+
+#plotAncStatesPie(dec_example, cladogenetic = T, tip_labels_offset = 0.2,pie_colors = "default")
+
+# You can see the states sampled in the analysis in the
+# dec_example@state_labels vector. This may be different 
+# from the `labs` vector you provided above if not all 
+# possible states are included in the annotated tree.
+dec_example@state_labels
+
+# We are going to generate colors for these states using
+# a color palette, but you could also specify a color per
+# state manually. 
+
+# Get the length of the dec_example$state_labels vector
+# to know how many colors you need. 
+ncol <- length(dec_example@state_labels)
+
+# We use colorRampPalette() to generate a function that will
+# expand the RevGadgets color palette (colFun) to the necessary
+# number of colors, but you can use any colors you like as long 
+# as each state_label has a color. 
+colors <- colorRampPalette(colFun(12))(ncol)
+
+# Name the color vector with your state labels and then order 
+# it in the order you'd like the ranges to appear in your legend.
+# Otherwise, they will appear alphabetically. 
+names(colors) <- dec_example@state_labels
+colors
+# Plot the results with pies at nodes
+pie <- plotAncStatesPie(t = dec_example,
+                        # Include cladogenetic events
+                        cladogenetic = TRUE, 
+                        # Add text labels to the tip pie symbols
+                        tip_labels_states = TRUE,
+                        # Offset those text labels slightly
+                        tip_labels_states_offset = .05,
+                        # Pass in your named and ordered color vector
+                        pie_colors = colors, 
+                        # Offset the tip labels to make room for tip pies
+                        tip_labels_offset = .2, 
+                        # Move tip pies right slightly 
+                        tip_pie_nudge_x = .07,
+                        # Change the size of node and tip pies  
+                        tip_pie_size = 0.8,
+                        node_pie_size = 1.5) +
+  # Move the legend 
+  theme(legend.position = c(0.1, 0.75))
+pie
+#######Finally we well make a plot with the posterior probability proportional to the size of the cicles at the nodes
+map <- plotAncStatesMAP(t = dec_example, 
+                        # Include cladogenetic events
+                        cladogenetic = T,
+                        # Pass in the same color vector
+                        node_color = colors,
+                        # adjust tip labels 
+                        tip_labels_offset = 0.1,
+                        # increase tip states symbol size
+                        tip_states_size = 3) +
+  # adjust legend position and remove color guide
+  theme(legend.position = c(0.2, 0.87)) + 
+  guides(color = FALSE)
+map
+```
+
+Visualizing the parameters
+
+```{r}
+
+# specify the input file
+file <- "ChromEvol_clado_model.log"
+
+# read the trace and discard burnin
+trace_quant <- readTrace(path = file, burnin = 0.1)
+
+# or read the trace _then_ discard burnin
+trace_quant <- readTrace(path = file, burnin = 0)
+trace_quant <- removeBurnin(trace = trace_quant, burnin = 0.1)
+
+library(coda)
+trace_quant_MCMC <- as.mcmc(trace_quant[[1]])
+effectiveSize(trace_quant_MCMC)
+traceplot(trace_quant_MCMC)
+trace_quant
+summarizeTrace(trace = trace_quant, vars =  c("clado_fission_pr","clado_fusion_pr","clado_polyploid_pr", "gamma", "delta", "rho"))
+
+plotTrace(trace = trace_quant, vars = c("gamma", "delta", "rho"))[[1]]
+plotTrace(trace = trace_quant, vars = c("clado_fission_pr","clado_fusion_pr","clado_polyploid_pr"))[[1]]
+```
+

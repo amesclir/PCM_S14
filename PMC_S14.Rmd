@@ -78,6 +78,23 @@ Valdés-Florido, A., Tan, L., Maguilla, E., Simón-Porcar, V. I., Zhou, Y. H., A
 Maguilla, E., Escudero, M., Jiménez-Lobato, V., Díaz-Lifante, Z., Andrés-Camacho, C., & Arroyo, J. (2021). Polyploidy expands the range of Centaurium (Gentianaceae). Frontiers in Plant Science, 12, 650551.
 
 
+###############################################################################
+Elementos extras y avanzados:
+
+CHROMOEVOL 3.0
+
+Resumen
+
+Los cambios en el número de cromosomas son un importante impulsor de la evolución de las plantas, afectando la diversificación ecológica, la tolerancia al estrés y los fenotipos. ChromEvol es una herramienta de software ampliamente utilizada para descifrar patrones de cambio en el número de cromosomas a lo largo de una filogenia de interés.  El programa evalúa el ajuste de modelos alternativos a los datos, estima las tasas de transición de diferentes tipos de eventos e infiere el número esperado de eventos a lo largo de cada rama de la filogenia.
+
+Shafir et al. (2024) ha desarrollado ChromEvol v.3, que presenta múltiples avances metodológicos novedosos que capturan la variación en las tasas de transición a lo largo de una filogenia. Esta versión permite mejor a los investigadores identificar cómo las tasas de disploidía y poliploidía cambian según el número de cromosomas en el genoma, con respecto a un rasgo discreto o en ciertos subclados de la filogenia.
+
+En el artículo de publicación demuestran la aplicabilidad de los nuevos modelos en la filogenia de las Solanáceas. Sus análisis identifican cuatro regímenes de transición del número de cromosomas que caracterizan distintos clados de Solanáceas y demuestran una asociación entre la autocompatibilidad y la alteración de la dinámica de la evolución del número de cromosomas.
+
+ChromEvol v.3, disponible en https://github.com/anatshafir1/chromevol, ofrece a los investigadores una herramienta más flexible, completa y precisa para investigar la evolución del número de cromosomas y los diversos procesos que lo afectan.
+
+
+MODELIZACIÓN CONJUNTA DE CARACTERES BINARIOS Y CROMOSOMAS
 
 Ahora vamos a ver el modelo ChromoPlus (Blackmon et al., 2019) (parecido a BiChrom, pero en mi opinión con una mejor implementación, ya que usa el paquete Diversitree; Zenil-Ferguson et al., 2017, 2018). Con este modelo podemos modelizar conjuntamente un caracter discreto binario y el número de cromosomas de manera dependiente.
 En este caso vamos reconstruir la biogeografía de Centaurium (ancestral vs. new colonized/expanded areas) y los cromosomas (Maguilla et al., 2021).
@@ -145,6 +162,8 @@ con.fit3$par
 
 ```
 
+
+MODELIZACIÓN CONJUNTA DE TASAS DE DIVERSIFICACIÓN Y CROMOSOMAS
 
 Finalmente vamos ajustar un modelo más complejo, el modelo ChromoSSE (Freyman & Hohna, 2018). En este caso calculamos tasas de evolución cromosomáticas en las ramas (anagenéticas), en los nodos (cladogenéticas) y una tasa de extinción global. Esto lo hacemos en el software RevBayes.
 Puedes usar los archivos de entrada Centaurium.tree y CentauriumData.tsv. Puedes copiar toda la carpeta data (donde están dichos archivos) y el archivo de control del análisis ChromEvol_clado.Rev y pégalos en la carpeta donde tengas instalado RevBayes. 

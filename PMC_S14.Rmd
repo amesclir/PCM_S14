@@ -9,11 +9,12 @@ editor_options:
 
 MODELO CHROMEVOL
 
-El primer acercamiento a la modelización de la evolución cromosomática son los modelos probabilísticos implementados en chromEvol y luego expandidos en la segunda versión de chromEvol (Mayrose et al., 2010; Glick & Mayrose, 2014).
+El primer acercamiento a la modelización de la evolución cromosomática son los modelos probabilísticos implementados en chromEvol y luego expandidos en la segunda versión de chromEvol (Mayrose et al., 2010; Glick & Mayrose, 2014). Recientemente ha sido publicado el software en su versión 3.0 (Shafir et al., 2024). Pero vamos utilizar la versión 2.0.
+
 Para detalles a cerca de estos modelos, por favor, lee el capítulo de libro Escudero et al. (2023) donde se habla sobre los diferentes parámetros que puede haber en estos modelos. No obstante, estos parámetro modelizan o bien la disploidía o bien la poliploidía.
 
-Lo primero que haremos es correr en chromEvol 2.0 los modelos CONST_RATE, CONST_RATE_DEMI, CONST_RATE_DEMI_EST, CONST_RATE_NO_DUPL, LINEAR_RATE, LINEAR_RATE_DEMI, LINEAR_RATE_DEMI_EST y LINEAR_RATE_NO_DUPL. 
-Copia y pega los archivos de control de análisis de cada uno de los modelos (paramCONST_RATE, paramCONST_RATE_DEMI, paramCONST_RATE_DEMI_EST, paramCONST_RATE_NO_DUPL, paramLINEAR_RATE, paramLINEAR_RATE_DEMI, paramLINEAR_RATE_DEMI_EST y paramLINEAR_RATE_NO_DUPL) que hay en este proyecto de R en la carpeta donde tengas instalado chromEvol2.0. Pegalos junto con los archivos de Centaurium (archivo de conteos de cromosomas Centaurium.txt y archivo del árbol filogenético Centaurium.tree). Puede ejercutar cada uno de los modelos con la linea "./chromEvol paramCONST_RATE". Y así con todos los modelos. (Esto es un poco parecido a lo que hacíamos con BAMM)
+Lo primero que haremos es correr en chromEvol 2.0 los modelos CONST_RATE, CONST_RATE_DEMI, CONST_RATE_DEMI_EST, CONST_RATE_NO_DUPL, LINEAR_RATE, LINEAR_RATE_DEMI, LINEAR_RATE_DEMI_EST, LINEAR_RATE_NO_DUPL, BASE_NUM y BASE_NUM_DUPL. 
+Copia y pega los archivos de control de análisis de cada uno de los modelos (paramCONST_RATE, paramCONST_RATE_DEMI, paramCONST_RATE_DEMI_EST, paramCONST_RATE_NO_DUPL, paramLINEAR_RATE, paramLINEAR_RATE_DEMI, paramLINEAR_RATE_DEMI_EST, paramLINEAR_RATE_NO_DUPL,  paramBASE_NUM y paramBASE_NUM_DUPL) que hay en este proyecto de R en la carpeta donde tengas instalado chromEvol2.0. Pegalos junto con los archivos de Centaurium (archivo de conteos de cromosomas Centaurium.txt y archivo del árbol filogenético Centaurium.tree). Puede ejercutar cada uno de los modelos con la linea "chromEvol param_CONST_RATE". Y así con todos los modelos. (Esto es un poco parecido a lo que hacíamos con BAMM)
 Una vez que tengas todos los resultados, pega la carpeta OUT en este proyecto de R.
 
 Compara los valores de AIC de los 10 modelos para los cuales tenemos resultados. Verás que el mejor modelo es BASE_NUM_DUPL, y el segundo mejor modelo es CONST_RATE_DEMI_EST.
@@ -37,6 +38,45 @@ plot.anc(myChromEvol2)
 ```
 
 Compara y discute los resultados.
+
+
+########################
+
+
+
+BIBLIOGRAFÍA BÁSICA
+
+Escudero, M., Maguilla, E., Márquez-Corro, J. I., Martín-Bravo, S., Mayrose, I., Shafir, A., ... & Zenil-Ferguson, R. (2023). Using ChromEvol to Determine the Mode of Chromosomal Evolution. In Plant Cytogenetics and Cytogenomics: Methods and Protocols (pp. 529-547). New York, NY: Springer US.
+
+Shafir, A., Halabi, K., Baumer, E., & Mayrose, I. (2025). ChromEvol v. 3: modeling rate heterogeneity in chromosome number evolution. New Phytologist, 245(4), 1787-1800.
+
+Glick, L., & Mayrose, I. (2014). ChromEvol: assessing the pattern of chromosome number evolution and the inference of polyploidy along a phylogeny. Molecular biology and evolution, 31(7), 1914-1922.
+
+Mayrose, I., Barker, M. S., & Otto, S. P. (2010). Probabilistic models of chromosome number evolution and the inference of polyploidy. Systematic biology, 59(2), 132-144.
+
+Shafir, A., Halabi, K., Escudero, M., & Mayrose, I. (2023). A non‐homogeneous model of chromosome‐number evolution to reveal shifts in the transition patterns across the phylogeny. New Phytologist, 238(4), 1733-1744.
+
+
+
+BIBLIOGRAFÍA RECOMENDADA
+
+Blackmon, H., Justison, J., Mayrose, I., & Goldberg, E. E. (2019). Meiotic drive shapes rates of karyotype evolution in mammals. Evolution, 73(3), 511-523.
+
+Freyman, W. A., & Höhna, S. (2018). Cladogenetic and anagenetic models of chromosome number evolution: a Bayesian model averaging approach. Systematic biology, 67(2), 195-215.
+
+Zenil-Ferguson, R., Ponciano, J. M., & Burleigh, J. G. (2017). Testing the association of phenotypes with polyploidy: An example using herbaceous and woody eudicots. Evolution, 71(5), 1138-1148.
+
+Zenil‐Ferguson, R., Burleigh, J. G., & Ponciano, J. M. (2018). chromploid: An R package for chromosome number evolution across the plant tree of life. Applications in plant sciences, 6(3), e1037.
+
+
+BIBLIOGRAFÍA CASOS DE ESTUDIO ADICIONALES
+
+Tribble, C. M., Márquez‐Corro, J. I., May, M. R., Hipp, A. L., Escudero, M., & Zenil‐Ferguson, R. (2024). Macroevolutionary inference of complex modes of chromosomal speciation in a cosmopolitan plant lineage. New Phytologist, 245, 2350-2361.
+
+Valdés-Florido, A., Tan, L., Maguilla, E., Simón-Porcar, V. I., Zhou, Y. H., Arroyo, J., & Escudero, M. (2023). Drivers of diversification in Linum (Linaceae) by means of chromosome evolution: correlations with biogeography, breeding system and habit. Annals of Botany, 132(5), 949-962.
+
+Maguilla, E., Escudero, M., Jiménez-Lobato, V., Díaz-Lifante, Z., Andrés-Camacho, C., & Arroyo, J. (2021). Polyploidy expands the range of Centaurium (Gentianaceae). Frontiers in Plant Science, 12, 650551.
+
 
 
 Ahora vamos a ver el modelo ChromoPlus (Blackmon et al., 2019) (parecido a BiChrom, pero en mi opinión con una mejor implementación, ya que usa el paquete Diversitree; Zenil-Ferguson et al., 2017, 2018). Con este modelo podemos modelizar conjuntamente un caracter discreto binario y el número de cromosomas de manera dependiente.
@@ -216,33 +256,5 @@ summarizeTrace(trace = trace_quant, vars =  c("clado_fission_pr","clado_fusion_p
 plotTrace(trace = trace_quant, vars = c("gamma", "delta", "rho"))[[1]]
 plotTrace(trace = trace_quant, vars = c("clado_fission_pr","clado_fusion_pr","clado_polyploid_pr"))[[1]]
 ```
-
-
-########################
-
-
-
-BIBLIOGRAFÍA BÁSICA
-
-Escudero, M., Maguilla, E., Márquez-Corro, J. I., Martín-Bravo, S., Mayrose, I., Shafir, A., ... & Zenil-Ferguson, R. (2023). Using ChromEvol to Determine the Mode of Chromosomal Evolution. In Plant Cytogenetics and Cytogenomics: Methods and Protocols (pp. 529-547). New York, NY: Springer US.
-
-
-BIBLIOGRAFÍA RECOMENDADA
-
-Blackmon, H., Justison, J., Mayrose, I., & Goldberg, E. E. (2019). Meiotic drive shapes rates of karyotype evolution in mammals. Evolution, 73(3), 511-523.
-
-Freyman, W. A., & Höhna, S. (2018). Cladogenetic and anagenetic models of chromosome number evolution: a Bayesian model averaging approach. Systematic biology, 67(2), 195-215.
-
-Glick, L., & Mayrose, I. (2014). ChromEvol: assessing the pattern of chromosome number evolution and the inference of polyploidy along a phylogeny. Molecular biology and evolution, 31(7), 1914-1922.
-
-Maguilla, E., Escudero, M., Jiménez-Lobato, V., Díaz-Lifante, Z., Andrés-Camacho, C., & Arroyo, J. (2021). Polyploidy expands the range of Centaurium (Gentianaceae). Frontiers in Plant Science, 12, 650551.
-
-Mayrose, I., Barker, M. S., & Otto, S. P. (2010). Probabilistic models of chromosome number evolution and the inference of polyploidy. Systematic biology, 59(2), 132-144.
-
-Tribble, C. M., Márquez-Corro, J. I., May, M. R., Hipp, A. L., Escudero, M., & Zenil-Ferguson, R. (2023). Detecting shifts in the mode of chromosomal speciation across the cosmopolitan plant lineage Carex. bioRxiv, 2023-09.
-
-Zenil-Ferguson, R., Ponciano, J. M., & Burleigh, J. G. (2017). Testing the association of phenotypes with polyploidy: An example using herbaceous and woody eudicots. Evolution, 71(5), 1138-1148.
-
-Zenil‐Ferguson, R., Burleigh, J. G., & Ponciano, J. M. (2018). chromploid: An R package for chromosome number evolution across the plant tree of life. Applications in plant sciences, 6(3), e1037.
 
 

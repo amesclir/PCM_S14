@@ -7,37 +7,165 @@ editor_options:
   chunk_output_type: console
 ---
 
-MODELO CHROMEVOL
+MODELOS DE EVOLUCIÓN CROMOSOMÁTICA
 
-El primer acercamiento a la modelización de la evolución cromosomática son los modelos probabilísticos implementados en chromEvol y luego expandidos en la segunda versión de chromEvol (Mayrose et al., 2010; Glick & Mayrose, 2014). Recientemente ha sido publicado el software en su versión 3.0 (Shafir et al., 2024). Pero vamos utilizar la versión 2.0.
+Evolución del Número Cromosómico: De ChromEvol a los Modelos Integrados
 
-Para detalles a cerca de estos modelos, por favor, lee el capítulo de libro Escudero et al. (2023) donde se habla sobre los diferentes parámetros que puede haber en estos modelos. No obstante, estos parámetro modelizan o bien la disploidía o bien la poliploidía.
+El primer acercamiento formal a la modelización de la evolución cromosómica se basa en modelos probabilísticos de procesos de nacimiento-muerte (birth-death), implementados originalmente en chromEvol y expandidos en su segunda versión (Mayrose et al., 2010; Glick & Mayrose, 2014). Recientemente, se ha publicado la versión 3.0 (Shafir et al., 2024/2025), que permite modelizar la heterogeneidad de tasas a lo largo de la filogenia y modelización conjunta de caracteres binarios y cromosomas.
 
-Lo primero que haremos es correr en chromEvol 2.0 los modelos CONST_RATE, CONST_RATE_DEMI, CONST_RATE_DEMI_EST, CONST_RATE_NO_DUPL, LINEAR_RATE, LINEAR_RATE_DEMI, LINEAR_RATE_DEMI_EST, LINEAR_RATE_NO_DUPL, BASE_NUM y BASE_NUM_DUPL. 
-Copia y pega los archivos de control de análisis de cada uno de los modelos (paramCONST_RATE, paramCONST_RATE_DEMI, paramCONST_RATE_DEMI_EST, paramCONST_RATE_NO_DUPL, paramLINEAR_RATE, paramLINEAR_RATE_DEMI, paramLINEAR_RATE_DEMI_EST, paramLINEAR_RATE_NO_DUPL,  paramBASE_NUM y paramBASE_NUM_DUPL) que hay en este proyecto de R en la carpeta donde tengas instalado chromEvol2.0. Pegalos junto con los archivos de Centaurium (archivo de conteos de cromosomas Centaurium.txt y archivo del árbol filogenético Centaurium.tree). Puede ejercutar cada uno de los modelos con la linea "chromEvol param_CONST_RATE". Y así con todos los modelos. (Esto es un poco parecido a lo que hacíamos con BAMM)
-Una vez que tengas todos los resultados, pega la carpeta OUT en este proyecto de R.
+Estos modelos se centran en dos procesos biológicos fundamentales:
 
-Compara los valores de AIC de los 10 modelos para los cuales tenemos resultados. Verás que el mejor modelo es BASE_NUM_DUPL, y el segundo mejor modelo es CONST_RATE_DEMI_EST.
+    Disploidía: Cambios incrementales en el número de cromosomas (ascendente por fisión o descendente por fusión/translocaciones).
 
-En primer lugar vamos representar el mejor modelo según la versión 1.0 de chromEvol (nuestro segundo mejor modelo).
+    Poliploidía: Duplicaciones completas del genoma (WGD - Whole Genome Duplication), ya sea por autopoliploidía o alopoliploidía.
+
+Modelos de Correlación y Estados de caracter
+
+Más allá de la reconstrucción simple del número cromosómico, han surgido herramientas que permiten explorar la causalidad y la correlación con otros rasgos biológicos:
+
+    BiChrom (Zenil-Ferguson et al., 2017, 2018): Implementado en el paquete de R chromploid, permite la modelización conjunta de rasgos binarios (por ejemplo, hábito herbáceo vs. leñoso) y la evolución cromosómica, analizando si el rasgo influye en las tasas de poliploidización o disploidía.
+
+    ChromoPlus (Blackmon et al., 2019): Incluido en el paquete diversitree, permite incluso modelar tasas de especiación y extinción asociadas a los estados de un carácter binario y su interacción con los cromosomas (modelos tipo SSE), como ocurre con los sistemas de determinación sexual o el impulso meiótico.
+
+    Modelos Cladogenéticos: Es importante mencionar que software como RevBayes (a través de modelos propuestos por Freyman & Höhna, 2018) permiten distinguir entre cambios que ocurren a lo largo de las ramas (anagénesis) y cambios que ocurren específicamente durante los eventos de especiación (cladogénesis).
+
+    Lectura Clave: Para profundizar en los parámetros específicos (tasas de ganancia, pérdida, duplicación y transiciones), es fundamental consultar el capítulo de Escudero et al. (2023). En él se detalla cómo configurar los modelos para que reflejen de forma realista la biología del grupo de estudio.
+
+
+MODELIZACIÓN CONJUNTA DE CARACTERES BINARIOS Y CROMOSOMAS
+
+Implementación avanzada: Modelos Correlacionados con ChromoPlus
+
+A continuación, exploraremos el modelo ChromoPlus (Blackmon et al., 2019). Este enfoque es conceptualmente similar a BiChrom (Zenil-Ferguson et al., 2017, 2018), pero ofrece una implementación más versátil al estar integrado en el paquete diversitree.
+
+La principal ventaja de ChromoPlus es que nos permite modelizar de forma conjunta y dependiente un carácter discreto binario y el número cromosómico. Esto es fundamental para probar hipótesis donde la biología del rasgo (o la geografía) puede estar alterando las tasas de poliploidía o disploidía.
+Caso Práctico: Biogeografía y Cromosomas en Centaurium
+
+Para poner en práctica este modelo, utilizaremos los datos de Maguilla et al. (2021) sobre el género Centaurium. El objetivo es reconstruir simultáneamente:
+
+    La geografía: Categorizada como un rasgo binario (Áreas ancestrales vs. Áreas de nueva colonización/expansión).
+
+    La evolución cromosómica: El número de cromosomas a lo largo de la filogenia.
+
+Este análisis nos permitirá testar una hipótesis biológica fascinante: ¿Facilita la poliploidía la colonización de nuevas áreas o la expansión del rango geográfico? Al modelizar ambos procesos conjuntamente, podremos observar si las tasas de transición cromosómica difieren significativamente entre las regiones ancestrales y las de reciente expansión.
 
 ```{r}
-library(ape)
-source("ChromEvol.R")
-myChromEvol <- read.ce("./OUT/CONST_RATE_DEMI_EST/")
-plot.anc(myChromEvol)
+# ==============================================================================
+# Chromosome and Binary Trait Co-evolutionary Analysis (ChromoPlus)
+# ==============================================================================
+# This script models the joint evolution of chromosome numbers and a binary trait
+# using the chromePlus extension for the diversitree package.
+# Updated: Includes haploid conversion, range filtering, and tree pruning.
+
+# --- 0. Setup and Dependencies ---
+# if (!require("devtools")) install.packages("devtools")
+# devtools::install_github('coleoguy/chromePlus', force = TRUE)
+
+library(chromePlus)
+library(diversitree)
+library(phytools) # Required for tree pruning
+
+# --- 1. Data Preparation and Transformation ---
+cat("Loading and transforming data...\n")
+mydata <- read.csv("./Centaurium input_AncestralAreas.csv")
+
+# 1.1 Convert to haploid chromosome number (DCN to n)
+mydata[,2] <- mydata[,2] / 2
+
+# 1.2 Filter dataset by haploid range (keeping only n = 9 to 28)
+mydata_filtered <- mydata[mydata[,2] >= 9 & mydata[,2] <= 28, ]
+cat("Species kept after range filtering (n: 9-28):", nrow(mydata_filtered), "\n")
+
+# --- 2. Tree Validation and Pruning ---
+cat("Loading and pruning tree...\n")
+mytree <- read.tree("./Centaurium.tree")
+
+# 2.1 Identify and remove taxa in the tree that are NOT in our filtered dataset
+taxa_to_drop <- mytree$tip.label[!(mytree$tip.label %in% mydata_filtered[,1])]
+mytree_pruned <- drop.tip(mytree, taxa_to_drop)
+
+# 2.2 Ensure the pruned tree is ultrametric (essential for ODE solvers)
+if (!is.ultrametric(mytree_pruned)) {
+  mytree_pruned <- force.ultrametric(mytree_pruned)
+  cat("Tree was not ultrametric; fixed with force.ultrametric.\n")
+}
+
+# 2.3 Verify exact match between tree and filtered data
+if(!all(mytree_pruned$tip.label %in% mydata_filtered[,1])) {
+  stop("Final mismatch: Some tree tips do not have corresponding data.")
+}
+cat("Final tree tips:", length(mytree_pruned$tip.label), "\n")
+
+# --- 3. State Matrix Construction ---
+# Note: hyper=TRUE adds 'hyper-states' for unobserved rate variation
+cat("Preparing state matrix...\n")
+dat.mat2 <- datatoMatrix(x = mydata_filtered[, 1:3], 
+                         range = c(9, 28), 
+                         hyper = TRUE)
+head(dat.mat2)
+# --- 4. Likelihood Function Construction ---
+# Model 0: The "Full" Saturated Model
+# This is the raw mathematical foundation. It treats every chromosome number 
+# as an independent state with its own transition rate.
+# It is too complex for biological inference but necessary as a base for constraints.
+cat("Constructing initial likelihood function (Model 0)...\n")
+lik <- make.mkn(tree = mytree_pruned, 
+                states = dat.mat2, 
+                k = ncol(dat.mat2), 
+                strict = FALSE, 
+                control = list(method = "ode"))
+lik
+
+# --- 5. Model Constraining ---
+# Model 1: Complex/Trait-Dependent Model
+# HYPOTHESIS: Chromosome evolution rates (gain/loss) DEPEND on the binary trait (biogeography).
+# It allows different rates for State 0 (Ancestral) and State 1 (Colonized).
+# Parameters to estimate: gain0, loss0, gain1, loss1, etc.
+cat("Constraining Model 1 (Complex/Trait-Dependent)...\n")
+con.lik3 <- constrainMkn(data = dat.mat2,
+                         lik = lik,
+                         polyploidy = FALSE, # Assuming no Whole Genome Duplication
+                         hyper = TRUE,      # Allowing hidden states to capture rate heterogeneity
+                         constrain = list(drop.demi = FALSE,
+                                          drop.poly = FALSE))
+con.lik3
+
+# Model 2: Simple/Trait-Independent Model (The Null Hypothesis)
+# HYPOTHESIS: Chromosome evolution is INDEPENDENT of the binary trait.
+# 'nometa = TRUE' forces all rates to be equal across biogeographical states (e.g., gain0 = gain1).
+# This model tests if biogeography has NO effect on chromosomal dynamics.
+cat("Constraining Model 2 (Simple/Trait-Independent)...\n")
+con.lik4 <- constrainMkn(data = dat.mat2,
+                         lik = lik,
+                         constrain = list(nometa = TRUE))
+
+# --- 6. Parameter Verification ---
+cat("Free parameters in Complex Model:", length(argnames(con.lik3)), "\n")
+cat("Free parameters in Simple Model:", length(argnames(con.lik4)), "\n")
+
+# --- 7. Maximum Likelihood Estimation (MLE) ---
+# Optimization using 'subplex' method
+cat("Running MLE optimization for Model 3 (Complex)...\n")
+con.fit3 <- find.mle(con.lik3, x.init = rep(0.1, length(argnames(con.lik3))), method = "subplex")
+
+cat("Running MLE optimization for Model 4 (Simple)...\n")
+con.fit4 <- find.mle(con.lik4, x.init = rep(0.1, length(argnames(con.lik4))), method = "subplex")
+
+# --- 8. Model Comparison and Results ---
+cat("\n--- Model Comparison (ANOVA) ---\n")
+
+# Corrected anova call
+model_comparison <- anova(con.fit3, simple = con.fit4)
+
+# To make it more readable in the output:
+rownames(model_comparison) <- c("Complex_Model", "Simple_Model")
+print(model_comparison)
+
+cat("\n--- Estimated Parameters (Model 3) ---\n")
+print(con.fit3$par)
 
 ```
 
-Y en segundo lugar el mejor modelo según la versión 2.0 de chromEvol.
-```{r}
-
-myChromEvol2 <- read.ce("./OUT/BASE_NUM_DUPL/")
-plot.anc(myChromEvol2)
-
-```
-
-Compara y discute los resultados.
 
 
 ########################
@@ -78,9 +206,11 @@ Valdés-Florido, A., Tan, L., Maguilla, E., Simón-Porcar, V. I., Zhou, Y. H., A
 Maguilla, E., Escudero, M., Jiménez-Lobato, V., Díaz-Lifante, Z., Andrés-Camacho, C., & Arroyo, J. (2021). Polyploidy expands the range of Centaurium (Gentianaceae). Frontiers in Plant Science, 12, 650551.
 
 
-###############################################################################
-Elementos extras y avanzados:
+######################################################################
+Elementos extras y avanzados:                                        
+######################################################################
 
+######################################################################
 CHROMOEVOL 3.0
 
 Resumen
@@ -94,74 +224,7 @@ En el artículo de publicación demuestran la aplicabilidad de los nuevos modelo
 ChromEvol v.3, disponible en https://github.com/anatshafir1/chromevol, ofrece a los investigadores una herramienta más flexible, completa y precisa para investigar la evolución del número de cromosomas y los diversos procesos que lo afectan.
 
 
-MODELIZACIÓN CONJUNTA DE CARACTERES BINARIOS Y CROMOSOMAS
-
-Ahora vamos a ver el modelo ChromoPlus (Blackmon et al., 2019) (parecido a BiChrom, pero en mi opinión con una mejor implementación, ya que usa el paquete Diversitree; Zenil-Ferguson et al., 2017, 2018). Con este modelo podemos modelizar conjuntamente un caracter discreto binario y el número de cromosomas de manera dependiente.
-En este caso vamos reconstruir la biogeografía de Centaurium (ancestral vs. new colonized/expanded areas) y los cromosomas (Maguilla et al., 2021).
-
-```{r}
-#install.packages("Rtools")
-#install.packages("devtools")
-#library(devtools)
-#install_github('coleoguy/chromePlus')
-#force=TRUE
-library(chromePlus)
-library(diversitree)
-
-##Chromosome number and distribution##
-
-?datatoMatrix
-dat.mat2 <- datatoMatrix(x=mydata[,1:3], range= c(9,28), hyper=T)
-dat.mat2
-
-# make the basic likelihood function
-
-?is.ultrametric
-is.ultrametric(mytree)
-
-?make.mkn
-
-lik <- make.mkn(tree = mytree, states= dat.mat2, k=ncol(dat.mat2), strict = F, control = list(method="ode"))
-
-
-# constrain the likelihood function to a biologically realistic design
-
-?constrainMkn
-
-con.lik3 <- constrainMkn(data = dat.mat2,
-                        lik = lik,
-                        polyploidy = F,
-                        hyper = T,
-                        constrain = list(drop.demi = F,
-                                         drop.poly= F))
-
-
-con.lik4 <- constrainMkn(data = dat.mat2,
-                        lik = lik,
-                        constrain = list(nometa = T))
-
-# lets make sure we have the parameters we expect
-#?argnames
-argnames(lik)
-argnames(con.lik3)
-argnames(con.lik4)
-#Una vez que tenemos lik y con.lik, sigo utilizando diversitree
-#Crear modelos ML con "lik" y con "con.lik"
-
-con.fit3 <- find.mle(con.lik3, rep(0.1,10), method="subplex")
-
-con.fit4 <- find.mle(con.lik4, rep(0.1,6), method="subplex")
-
-con.fit3$par
-con.fit4$par
-
-anova(constrained=con.fit4, con.fit3)
-
-names(con.fit3)
-con.fit3$par
-
-```
-
+######################################################################
 
 MODELIZACIÓN CONJUNTA DE TASAS DE DIVERSIFICACIÓN Y CROMOSOMAS
 
@@ -277,3 +340,32 @@ plotTrace(trace = trace_quant, vars = c("clado_fission_pr","clado_fusion_pr","cl
 ```
 
 
+######################################################################
+
+CHROMEVOL 2.0 (SOLO ESTÁN IMPLEMENTADOS LOS MODELOS MÁS SIMPLES)
+
+Lo primero que haremos es correr en chromEvol 2.0 los modelos CONST_RATE, CONST_RATE_DEMI, CONST_RATE_DEMI_EST, CONST_RATE_NO_DUPL, LINEAR_RATE, LINEAR_RATE_DEMI, LINEAR_RATE_DEMI_EST, LINEAR_RATE_NO_DUPL, BASE_NUM y BASE_NUM_DUPL. 
+Copia y pega los archivos de control de análisis de cada uno de los modelos (paramCONST_RATE, paramCONST_RATE_DEMI, paramCONST_RATE_DEMI_EST, paramCONST_RATE_NO_DUPL, paramLINEAR_RATE, paramLINEAR_RATE_DEMI, paramLINEAR_RATE_DEMI_EST, paramLINEAR_RATE_NO_DUPL,  paramBASE_NUM y paramBASE_NUM_DUPL) que hay en este proyecto de R en la carpeta donde tengas instalado chromEvol2.0. Pegalos junto con los archivos de Centaurium (archivo de conteos de cromosomas Centaurium.txt y archivo del árbol filogenético Centaurium.tree). Puede ejercutar cada uno de los modelos con la linea "chromEvol param_CONST_RATE". Y así con todos los modelos. (Esto es un poco parecido a lo que hacíamos con BAMM)
+Una vez que tengas todos los resultados, pega la carpeta OUT en este proyecto de R.
+
+Compara los valores de AIC de los 10 modelos para los cuales tenemos resultados. Verás que el mejor modelo es BASE_NUM_DUPL, y el segundo mejor modelo es CONST_RATE_DEMI_EST.
+
+En primer lugar vamos representar el mejor modelo según la versión 1.0 de chromEvol (nuestro segundo mejor modelo).
+
+```{r}
+library(ape)
+source("ChromEvol.R")
+myChromEvol <- read.ce("./OUT/CONST_RATE_DEMI_EST/")
+plot.anc(myChromEvol)
+
+```
+
+Y en segundo lugar el mejor modelo según la versión 2.0 de chromEvol.
+```{r}
+
+myChromEvol2 <- read.ce("./OUT/BASE_NUM_DUPL/")
+plot.anc(myChromEvol2)
+
+```
+
+Compara y discute los resultados.
